@@ -18,6 +18,8 @@
       llvmPackages_21.libcxx
       cmake
     ];
+    
+    shell_hook_message = "Entering C++ Shell";
   in
   {
     devShells.${system}.default = pkgs.mkShell {
@@ -27,65 +29,65 @@
         gef
       ];
       shellHook = ''
-        echo "Entering C++ shell"
+        echo "${shell_hook_message}" 
       '';
     };
 
-    packages.${system}.debug = pkgs.stdenv.mkDerivation (finalAttrs: {
-        pname = "${exec_name}-debug";
-        version = "${version}";
-        dontStrip = true;
-        src = ./.;
+    packages.${system} = {
+      debug = pkgs.stdenv.mkDerivation (finalAttrs: {
+          pname = "${exec_name}";
+          version = "${version}";
+          dontStrip = true;
+          src = ./.;
 
-        nativeBuildInputs = build_dependencies;
+          nativeBuildInputs = build_dependencies;
 
-        buildInputs = with pkgs; [
-          llvmPackages_21.libcxx
-        ];
+          buildInputs = with pkgs; [
+            llvmPackages_21.libcxx
+          ];
 
-        cmakeFlags = [
-          "-DCMAKE_BUILD_TYPE=Debug"
-          "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-        ];
-        
-        installPhase = ''
-          mkdir -p $out/bin
-          cp compile_commands.json $out/bin
-          cp ${exec_name} $out/bin
-        '';
-      });
+          cmakeFlags = [
+            "-DCMAKE_BUILD_TYPE=Debug"
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+          ];
+          
+          installPhase = ''
+            mkdir -p $out/bin
+            cp compile_commands.json $out/bin
+            cp ${exec_name} $out/bin
+          '';
+        });
+      release = pkgs.stdenv.mkDerivation (finalAttrs: {
+          pname = "${exec_name}";
+          version = "${version}";
+          src = ./.;
 
-      apps.${system}.debug = {
-        type = "app";
-        program = "${self.packages.${system}.debug}/bin/${exec_name}";
-      };
-    
-    packages.${system}.release = pkgs.stdenv.mkDerivation (finalAttrs: {
-        pname = "${exec_name}-release";
-        version = "${version}";
-        src = ./.;
+          nativeBuildInputs = build_dependencies;
 
-        nativeBuildInputs = build_dependencies;
+          buildInputs = with pkgs; [
+            llvmPackages_21.libcxx
+          ];
 
-        buildInputs = with pkgs; [
-          llvmPackages_21.libcxx
-        ];
+          cmakeFlags = [
+            "-DCMAKE_BUILD_TYPE=Release"
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+          ];
+          
+          installPhase = ''
+            mkdir -p $out/bin
+            cp compile_commands.json $out/bin
+            cp ${exec_name} $out/bin
+          '';
+        });
 
-        cmakeFlags = [
-          "-DCMAKE_BUILD_TYPE=Release"
-          "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-        ];
-        
-        installPhase = ''
-          mkdir -p $out/bin
-          cp compile_commands.json $out/bin
-          cp ${exec_name} $out/bin
-        '';
-      });
-
-      apps.${system}.debug = {
-        type = "app";
-        program = "${self.packages.${system}.debug}/bin/${exec_name}";
-      };
+        apps.${system}.debug = {
+          type = "app";
+          program = "${self.packages.${system}.debug}/bin/${exec_name}";
+        };
+        apps.${system}.release = {
+          type = "app";
+          program = "${self.packages.${system}.debug}/bin/${exec_name}";
+        };
+    };
   };
 }
