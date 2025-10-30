@@ -1,0 +1,61 @@
+{
+  description = "C++ Nix flake configuration.";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+  };
+
+  outputs = { self, nixpkgs }: 
+  let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+
+    exec_name = "app";
+    version = "1.0.0";
+  in
+  {
+    devShells.${system}.default = pkgs.mkShell {
+      packages = with pkgs; [
+        clang-tools
+        # valgrind
+        gef
+      ];
+      shellHook = ''
+        echo "Entering C++ shell"
+      '';
+    };
+
+    packages.${system}.debug = pkgs.stdenv.mkDerivation (finalAttrs: {
+        pname = "${exec_name}-debug";
+        version = "${version}";
+        dontStrip = true;
+        src = ./.;
+
+        nativeBuildInputs = with pkgs; [
+          llvmPackages_21.libcxxClang
+          llvmPackages_21.libcxx
+          cmake
+        ];
+
+        buildInputs = with pkgs; [
+          llvmPackages_21.libcxx
+        ];
+
+        cmakeFlags = [
+          "-DCMAKE_BUILD_TYPE=Debug"
+          "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+        ];
+        
+        installPhase = ''
+          mkdir -p $out/bin
+          cp compile_commands.json $out/bin
+          cp ${exec_name} $out/bin
+        '';
+      });
+
+      apps.${system}.debug = {
+        type = "app";
+        program = "${self.packages.${system}.debug}/bin/${exec_name}";
+      };
+  };
+}
