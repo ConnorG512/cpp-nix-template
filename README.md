@@ -1,5 +1,9 @@
 # Nix / CPP Configuration
 
+*Viewing the nix tree:*
+```
+nix flake show
+```
 *Entering the development shell:*
 ```
 nix develop
