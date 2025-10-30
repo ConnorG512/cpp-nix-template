@@ -4,7 +4,11 @@
 ```
 nix develop
 ```
-*Running the debug build:*
+*Building the debug build:*
 ```
 nix build .#debug
+```
+*Building and running the debug build*
+```
+nix run .#debug
 ```
