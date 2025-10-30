@@ -80,13 +80,15 @@
           '';
         });
 
-        apps.${system}.debug = {
-          type = "app";
-          program = "${self.packages.${system}.debug}/bin/${exec_name}";
-        };
-        apps.${system}.release = {
-          type = "app";
-          program = "${self.packages.${system}.debug}/bin/${exec_name}";
+        apps.${system} = {
+          debug = {
+            type = "app";
+            program = "${self.packages.${system}.debug}/bin/${exec_name}";
+          };
+          release = {
+            type = "app";
+            program = "${self.packages.${system}.debug}/bin/${exec_name}";
+          };
         };
     };
   };
