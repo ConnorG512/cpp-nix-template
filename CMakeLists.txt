@@ -14,7 +14,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCE_FILES
   src/main.cpp
 )
-set(INCLUDE_DIR include)
+set(INCLUDE_DIRS
+  include
+)
 set(LINKED_LIBRARIES
 
 )
@@ -24,25 +26,25 @@ set(LINKED_LIBRARIES
 #############
 project(${PROJECT_NAME} ${PROJECT_LANGUAGE})
 
-# Platform
+# Building the executable: 
 if(WIN32)
+  message(VERBOSE "Building Windows executable.")
   add_executable(${EXECUTABLE_NAME} WIN32 ${SOURCE_FILES})
-else()
+elseif(UNIX AND NOT APPLE)
+  message(VERBOSE "Building Linux executable.")
   add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 endif()
 
-target_include_directories(${EXECUTABLE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${INCLUDE_DIR}")
+# Include directories
+foreach(dir IN LISTS INCLUDE_DIRS)
+  target_include_directories(${EXECUTABLE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${dir}")
+endforeach()
 
-if(MINGW)
-  message(VERBOSE "MINGW Compiler found, static linking libgcc and libstdc++")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc")
-elseif(UNIX AND NOT APPLE)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(VERBOSE "Debug build detected, linking fsanitize and ggdb")
-    target_compile_options(${EXECUTABLE_NAME} PRIVATE -fsanitize=address,undefined -ggdb)
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -fsanitize=address,undefined)
-  endif()
+# Extra Debug tools for Linux:
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX AND NOT APPLE)
+  message(VERBOSE "Debug build detected, linking fsanitize and ggdb")
+  target_compile_options(${EXECUTABLE_NAME} PRIVATE -fsanitize=address,undefined -ggdb)
+  target_link_options(${EXECUTABLE_NAME} PRIVATE -fsanitize=address,undefined)
 endif()
 
 # Linking libraries:
