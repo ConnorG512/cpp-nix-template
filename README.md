@@ -8,19 +8,13 @@ nix flake show
 ```
 nix develop
 ```
-*Building the debug build:*
+*Building the application*
+`nix build *build type*.*libc*`
+For example: 
 ```
-nix build .\#debug
+nix build .\#debug.glibc
 ```
-*Building the release build:*
+Or: 
 ```
-nix build .\#release
-```
-*Building and running the debug build*
-```
-nix run .\#debug
-```
-*Building and running the release build*
-```
-nix run .\#release
+nix build .\#release.glibc
 ```
