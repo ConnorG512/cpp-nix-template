@@ -10,7 +10,7 @@
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-
+    execName = "app";
   in
   {
     devShells.${system}.default = 
@@ -32,7 +32,6 @@
     
     packages.x86_64-linux = 
     let 
-      execName = "app";
       version = "1.0.0";
       compileCommandsOn = "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON";
       commonInstallPhase = 
@@ -95,6 +94,10 @@
           installPhase = commonInstallPhase;
         });
       };
+    };
+    apps.x86_64-linux.default = {
+      type = "app";
+      program = "${self.packages.x86_64-linux.release.glibc}/bin/${execName}";
     };
   };
 }
