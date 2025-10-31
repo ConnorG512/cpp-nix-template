@@ -1,7 +1,8 @@
 {
   description = "C++ Nix flake configuration.";
 
-  inputs = {
+  inputs = 
+  {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
   };
 
@@ -10,86 +11,90 @@
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
 
-    exec_name = "app";
-    version = "1.0.0";
-
-    build_dependencies = with pkgs; [
-      llvmPackages_21.libcxxClang
-      llvmPackages_21.libcxx
-      cmake
-    ];
-    
-    shell_hook_message = "Entering C++ Shell";
   in
   {
-    devShells.${system}.default = pkgs.mkShell {
-      packages = with pkgs; [
+    devShells.${system}.default = 
+    let
+      shellHookMessage = "Entering C++ Shell";
+    in
+    pkgs.mkShell
+    {
+      packages = with pkgs; 
+      [
         clang-tools
-        # valgrind
         gef
       ];
-      shellHook = ''
-        echo "${shell_hook_message}" 
+      shellHook = 
+      ''
+        echo "${shellHookMessage}" 
       '';
     };
+    
+    packages.x86_64-linux = 
+    let 
+      execName = "app";
+      version = "1.0.0";
+      compileCommandsOn = "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON";
+      commonInstallPhase = 
+      ''
+        mkdir -p $out/bin
+        cp compile_commands.json $out/bin
+        cp ${execName} $out/bin
+      '';
+    
+    build_dependencies = with pkgs; 
+    [
+      llvmPackages_21.libcxxClang
+      cmake
+    ];
+    in
+    {
+      release = 
+      let
+        cmakeReleaseFlags = [
+          "-DCMAKE_BUILD_TYPE=Release"
+          compileCommandsOn
+        ];
+      in
+      {
+        glibc = pkgs.stdenv.mkDerivation (finalAttrs: 
+        {
+          pname = "${execName}";
+          version = "${version}";
+          src = ./.;
+          nativeBuildInputs = build_dependencies;
 
-    packages.${system} = {
-      debug = pkgs.stdenv.mkDerivation (finalAttrs: {
-          pname = "${exec_name}";
+          buildInputs = with pkgs; [
+            llvmPackages_21.libcxx
+          ];
+          cmakeFlags = cmakeReleaseFlags;
+          installPhase = commonInstallPhase;
+        });
+      };
+      debug = 
+      let
+        cmakeDebugFlags = 
+        [
+          "-DCMAKE_BUILD_TYPE=Debug"
+          compileCommandsOn
+        ];
+      in
+      {
+        glibc = pkgs.stdenv.mkDerivation (finalAttrs: 
+        {
+          pname = "${execName}";
           version = "${version}";
           dontStrip = true;
           src = ./.;
-
           nativeBuildInputs = build_dependencies;
 
           buildInputs = with pkgs; [
             llvmPackages_21.libcxx
           ];
-
-          cmakeFlags = [
-            "-DCMAKE_BUILD_TYPE=Debug"
-            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-          ];
-          
-          installPhase = ''
-            mkdir -p $out/bin
-            cp compile_commands.json $out/bin
-            cp ${exec_name} $out/bin
-          '';
+          cmakeFlags = cmakeDebugFlags;
+          installPhase = commonInstallPhase;
         });
-      release = pkgs.stdenv.mkDerivation (finalAttrs: {
-          pname = "${exec_name}";
-          version = "${version}";
-          src = ./.;
-
-          nativeBuildInputs = build_dependencies;
-
-          buildInputs = with pkgs; [
-            llvmPackages_21.libcxx
-          ];
-
-          cmakeFlags = [
-            "-DCMAKE_BUILD_TYPE=Release"
-            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-          ];
-          
-          installPhase = ''
-            mkdir -p $out/bin
-            cp compile_commands.json $out/bin
-            cp ${exec_name} $out/bin
-          '';
-        });
-
-        apps.${system} = {
-          debug = {
-            type = "app";
-            program = "${self.packages.${system}.debug}/bin/${exec_name}";
-          };
-          release = {
-            type = "app";
-            program = "${self.packages.${system}.debug}/bin/${exec_name}";
-          };
-        };
+      };
     };
   };
 }
