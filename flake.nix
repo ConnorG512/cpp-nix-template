@@ -95,9 +95,13 @@
         });
       };
     };
-    apps.x86_64-linux.default = {
-      type = "app";
-      program = "${self.packages.x86_64-linux.release.glibc}/bin/${execName}";
+    apps.x86_64-linux = 
+    {
+      glibc = 
+      {
+        type = "app";
+        program = "${self.packages.x86_64-linux.release.glibc}/bin/${execName}";
+      };
     };
   };
 }

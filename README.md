@@ -18,3 +18,7 @@ Or:
 ```
 nix build .\#release.glibc
 ```
+*Running Application:*
+```
+nix run .\#glibc
+```
