@@ -45,7 +45,9 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE
 )
 
 # Linking libraries:
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE)
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE
+  # Include library files here:
+)
 
 # Extra Debug tools for Linux:
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX AND NOT APPLE)
