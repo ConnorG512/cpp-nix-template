@@ -11,20 +11,24 @@ set(INSTALL_DIR bin)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Used in find_package
+set(PACKAGES 
+)
+
+# Used in add_executable
 set(SOURCE_FILES
   src/main.cpp
-)
-set(INCLUDE_DIRS
-  include
-)
-set(LINKED_LIBRARIES
-
 )
 
 #############
 # Building: #
 #############
 project(${PROJECT_NAME} ${PROJECT_LANGUAGE})
+
+# Find packages that have been downloaded / inside the nix build derivation:
+foreach(pkg IN LISTS PACKAGES)
+  find_package(${pkg} REQUIRED)
+endforeach()
 
 # Building the executable: 
 if(WIN32)
@@ -36,9 +40,12 @@ elseif(UNIX AND NOT APPLE)
 endif()
 
 # Include directories
-foreach(dir IN LISTS INCLUDE_DIRS)
-  target_include_directories(${EXECUTABLE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${dir}")
-endforeach()
+target_include_directories(${EXECUTABLE_NAME} PRIVATE 
+  "${CMAKE_SOURCE_DIR}/include"
+)
+
+# Linking libraries:
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE)
 
 # Extra Debug tools for Linux:
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX AND NOT APPLE)
@@ -46,11 +53,5 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX AND NOT APPLE)
   target_compile_options(${EXECUTABLE_NAME} PRIVATE -fsanitize=address,undefined -ggdb)
   target_link_options(${EXECUTABLE_NAME} PRIVATE -fsanitize=address,undefined)
 endif()
-
-# Linking libraries:
-foreach(lib IN LISTS LINKED_LIBRARIES)
-  find_package(${lib} REQUIRED)
-endforeach()
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${LINKED_LIBRARIES})
 
 install(TARGETS ${EXECUTABLE_NAME} RUNTIME DESTINATION ${INSTALL_DIR})
